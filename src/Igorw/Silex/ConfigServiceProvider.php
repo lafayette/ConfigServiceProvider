@@ -61,13 +61,23 @@ class ConfigServiceProvider implements ServiceProviderInterface
             $config = array($this->prefix => $config);
         }
 
+		$configExt = pathinfo($this->filename)['extension'];
+		if ($configExt) {
+			$configName = basename($this->filename, '.' . $configExt);
+		} else {
+			$configName = basename($this->filename);
+		}
+
+		$configData = (isset($app[$configName]) ? $app[$configName] : array());
         foreach ($config as $name => $value) {
-            if (isset($app[$name]) && is_array($value)) {
-                $app[$name] = $this->mergeRecursively($app[$name], $value);
+            if (isset($configData[$name]) && is_array($value)) {
+				$configData[$name] = $this->mergeRecursively($configData[$name], $value);
             } else {
-                $app[$name] = $this->doReplacements($value);
+				$configData[$name] = $this->doReplacements($value);
             }
         }
+
+		$app[$configName] = $configData;
     }
 
     private function mergeRecursively(array $currentValue, array $newValue)
